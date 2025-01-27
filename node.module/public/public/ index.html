@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multiplayer Chat</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    #chat { height: 300px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; }
+    #message { width: 60%; padding: 5px; }
+    #send { padding: 5px 10px; }
+    #toUserId { width: 20%; padding: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Multiplayer Chat</h1>
+  <div id="chat"></div>
+  <input type="text" id="toUserId" placeholder="Send to ID (optional)" />
+  <input type="text" id="message" placeholder="Type your message..." />
+  <button id="send">Send</button>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Prompt for user's name
+    const name = prompt('Enter your name:');
+    socket.emit('join', name);
+
+    // Display welcome message with user ID
+    socket.on('welcome', (data) => {
+      const chat = document.getElementById('chat');
+      chat.innerHTML += `<p><strong>System:</strong> Welcome, ${data.name}! Your ID is ${data.userId}.</p>`;
+    });
+
+    // Display when a user joins
+    socket.on('userJoined', (data) => {
+      const chat = document.getElementById('chat');
+      chat.innerHTML += `<p><strong>System:</strong> ${data.name} joined the chat.</p>`;
+    });
+
+    // Display chat messages
+    socket.on('message', (data) => {
+      const chat = document.getElementById('chat');
+      chat.innerHTML += `<p><strong>${data.name}:</strong> ${data.message}</p>`;
+    });
+
+    // Display when a user leaves
+    socket.on('userLeft', (data) => {
+      const chat = document.getElementById('chat');
+      chat.innerHTML += `<p><strong>System:</strong> ${data.name} left the chat.</p>`;
+    });
+
+    // Send message
+    document.getElementById('send').addEventListener('click', () => {
+      const message = document.getElementById('message').value;
+      const toUserId = document.getElementById('toUserId').value;
+
+      if (message) {
+        socket.emit('chatMessage', { message, toUserId });
+        document.getElementById('message').value = '';
+        document.getElementById('toUserId').value = '';
+      }
+    });
+  </script>
+</body>
+</html>
